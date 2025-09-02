@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
 import Button from '../components/Button';
@@ -43,7 +43,7 @@ const ResetPasswordPage: React.FC = () => {
     return newErrors;
   };
 
-  // const navigate = useNavigate(); // Commented out as not used
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

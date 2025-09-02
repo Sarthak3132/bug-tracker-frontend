@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import { useNotification } from '../contexts/NotificationContext';
 import Sidebar from '../components/Sidebar';
@@ -13,7 +13,7 @@ import { MESSAGES } from '../utils/notifications';
 const BugDetail: React.FC = () => {
   const { projectId, bugId } = useParams<{ projectId: string; bugId: string }>();
   const navigate = useNavigate();
-  // const { user } = useAuth(); // Commented out as not used
+
   const { setBreadcrumbs } = useBreadcrumb();
   const { showSuccess, showError } = useNotification();
   

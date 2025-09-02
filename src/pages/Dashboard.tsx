@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import { useNotification } from '../contexts/NotificationContext';
 import Sidebar from '../components/Sidebar';
@@ -22,7 +22,7 @@ interface Project {
 }
 
 const Dashboard: React.FC = () => {
-  // const { user } = useAuth(); // Commented out as not used
+
   const { setBreadcrumbs } = useBreadcrumb();
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();

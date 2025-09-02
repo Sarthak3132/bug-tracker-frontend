@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import Sidebar from '../components/Sidebar';
 import Breadcrumb from '../components/Breadcrumb';
@@ -25,7 +25,7 @@ interface UserProfile {
 }
 
 const ProfilePage: React.FC = () => {
-  // const { user } = useAuth(); // Commented out as not used
+
   const { setBreadcrumbs } = useBreadcrumb();
   const navigate = useNavigate();
   
