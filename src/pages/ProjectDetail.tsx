@@ -29,7 +29,7 @@ const ProjectDetail: React.FC = () => {
   
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -257,7 +257,7 @@ const ProjectDetail: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
         >
           ☰
         </button>

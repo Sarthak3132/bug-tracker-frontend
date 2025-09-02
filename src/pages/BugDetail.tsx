@@ -19,7 +19,7 @@ const BugDetail: React.FC = () => {
   
   const [bug, setBug] = useState<Bug | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
   const [newComment, setNewComment] = useState('');
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -206,7 +206,7 @@ const BugDetail: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
         >
           ☰
         </button>

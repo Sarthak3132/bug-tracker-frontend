@@ -28,7 +28,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       )}
       
       {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 z-50 flex flex-col min-h-screen
+      <div className={`bg-white shadow-lg transition-all duration-300 z-50 flex flex-col h-screen
         md:relative md:translate-x-0
         ${isCollapsed 
           ? 'fixed -translate-x-full md:translate-x-0 w-48 sm:w-56 md:w-60 lg:w-16' 
