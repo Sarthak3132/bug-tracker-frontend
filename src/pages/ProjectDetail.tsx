@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import Sidebar from '../components/Sidebar';
@@ -24,6 +24,8 @@ interface Project {
 const ProjectDetail: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
   
@@ -43,6 +45,7 @@ const ProjectDetail: React.FC = () => {
   const [bugFilters, setBugFilters] = useState<BugFilters>({});
   const [isCreateBugModalOpen, setIsCreateBugModalOpen] = useState(false);
   const [isCreatingBug, setIsCreatingBug] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const currentUserMember = project?.members.find(m => m.userId._id === user?._id);
   const isAdmin = currentUserMember?.role === 'admin';
@@ -73,6 +76,54 @@ const ProjectDetail: React.FC = () => {
       console.log('Current user ID:', user?._id);
     }
   }, [project, setBreadcrumbs, navigate, user]);
+
+  // Scroll position restoration
+  useEffect(() => {
+    console.log('ProjectDetail useEffect running, container:', scrollContainerRef.current);
+    
+    const setupScrollListener = () => {
+      const savedScrollPosition = sessionStorage.getItem(`scroll-${location.pathname}`);
+      if (savedScrollPosition && scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = parseInt(savedScrollPosition);
+      }
+
+      const handleScroll = () => {
+        if (scrollContainerRef.current) {
+          const scrollTop = scrollContainerRef.current.scrollTop;
+          const scrollHeight = scrollContainerRef.current.scrollHeight;
+          const clientHeight = scrollContainerRef.current.clientHeight;
+          const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
+          sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
+          setShowScrollTop(scrollTop > quarterPage);
+          console.log('ProjectDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
+        }
+      };
+
+      const container = scrollContainerRef.current;
+      if (container) {
+        console.log('ProjectDetail: Adding scroll listener to container');
+        container.addEventListener('scroll', handleScroll, { passive: true });
+        // Initial check
+        handleScroll();
+        return () => {
+          console.log('ProjectDetail: Removing scroll listener');
+          container.removeEventListener('scroll', handleScroll);
+        };
+      } else {
+        console.log('ProjectDetail: No container found');
+      }
+    };
+
+    // Add a small delay to ensure DOM is ready
+    const timer = setTimeout(setupScrollListener, 100);
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const fetchProject = async () => {
     try {
@@ -251,10 +302,18 @@ const ProjectDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+    <>
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex overflow-hidden">
+        <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className="flex-1 flex flex-col">
+      <div 
+        ref={scrollContainerRef}
+        className={`flex-1 flex flex-col overflow-y-auto transition-all duration-300 ${
+          sidebarCollapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-60 lg:ml-64'
+        }`}
+      >
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
@@ -263,7 +322,7 @@ const ProjectDetail: React.FC = () => {
         </button>
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <div className="lg:pl-16">
+          <div>
             <Breadcrumb />
             
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mt-4">
@@ -295,7 +354,7 @@ const ProjectDetail: React.FC = () => {
 
         {/* Content */}
         <div className="flex-1 p-4 sm:p-6">
-          <div className="lg:pl-16 space-y-4 sm:space-y-6">
+          <div className="space-y-4 sm:space-y-6">
           {/* Project Info */}
           <div className="card p-4 sm:p-6">
             <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Project Information</h2>
@@ -661,7 +720,21 @@ const ProjectDetail: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+
+      </div>
+
+      {/* Scroll to Top Button - Global */}
+      <button
+        onClick={scrollToTop}
+        className="group fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 hover:-translate-y-1 backdrop-blur-sm border border-white/20"
+        style={{ zIndex: 9999 }}
+        title="Scroll to top"
+      >
+        <svg className="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
+    </>
   );
 };
 

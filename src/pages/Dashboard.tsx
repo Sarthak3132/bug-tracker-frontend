@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import { useNotification } from '../contexts/NotificationContext';
@@ -26,12 +26,15 @@ const Dashboard: React.FC = () => {
   const { setBreadcrumbs } = useBreadcrumb();
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();
+  const location = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768); // Collapsed only on mobile, open on tablet+
   const [searchTerm, setSearchTerm] = useState('');
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     // Set breadcrumbs for dashboard
@@ -41,6 +44,40 @@ const Dashboard: React.FC = () => {
     ]);
     fetchProjects();
   }, [setBreadcrumbs]);
+
+  // Scroll position restoration
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem(`scroll-${location.pathname}`);
+    if (savedScrollPosition && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = parseInt(savedScrollPosition);
+    }
+
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const scrollTop = scrollContainerRef.current.scrollTop;
+        const scrollHeight = scrollContainerRef.current.scrollHeight;
+        const clientHeight = scrollContainerRef.current.clientHeight;
+        const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
+        sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
+        setShowScrollTop(scrollTop > quarterPage);
+        // console.log('Scroll:', { scrollTop, quarterPage, show: scrollTop > quarterPage });
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      // Initial check
+      handleScroll();
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [location.pathname]);
+
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const fetchProjects = async () => {
     try {
@@ -79,15 +116,23 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex relative">
-      {/* Sidebar */}
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-      />
+    <>
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex relative overflow-hidden">
+        {/* Sidebar */}
+        <Sidebar 
+          isCollapsed={sidebarCollapsed} 
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+        />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Main Content */}
+        <div 
+          ref={scrollContainerRef}
+          className={`flex-1 flex flex-col overflow-y-auto transition-all duration-300 ${
+            sidebarCollapsed 
+              ? 'md:ml-16' 
+              : 'md:ml-60 lg:ml-64'
+          }`}
+        >
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -96,8 +141,8 @@ const Dashboard: React.FC = () => {
           ☰
         </button>
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6 lg:ml-0">
-          <div className="lg:pl-16">
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
+          <div>
             {/* Breadcrumb */}
             <Breadcrumb />
             
@@ -130,7 +175,7 @@ const Dashboard: React.FC = () => {
 
         {/* Content Area */}
         <div className="flex-1 p-4 sm:p-6">
-          <div className="lg:pl-16">
+          <div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Projects Section */}
             <div>
@@ -179,14 +224,29 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Create Project Modal */}
-      <CreateProjectModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreateProject}
-        isLoading={isCreating}
-      />
-    </div>
+        {/* Create Project Modal */}
+        <CreateProjectModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreateProject}
+          isLoading={isCreating}
+        />
+      </div>
+
+      {/* Scroll to Top Button - Global */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="group fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 hover:-translate-y-1 backdrop-blur-sm border border-white/20"
+          style={{ zIndex: 9999 }}
+          title="Scroll to top"
+        >
+          <svg className="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </button>
+      )}
+    </>
   );
 };
 

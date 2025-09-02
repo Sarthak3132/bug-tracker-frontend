@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
 import Sidebar from '../components/Sidebar';
@@ -28,12 +28,14 @@ const ProfilePage: React.FC = () => {
 
   const { setBreadcrumbs } = useBreadcrumb();
   const navigate = useNavigate();
+  const location = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -43,6 +45,7 @@ const ProfilePage: React.FC = () => {
       smsNotifications: false
     }
   });
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -51,6 +54,40 @@ const ProfilePage: React.FC = () => {
     ]);
     fetchProfile();
   }, [setBreadcrumbs, navigate]);
+
+  // Scroll position restoration
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem(`scroll-${location.pathname}`);
+    if (savedScrollPosition && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = parseInt(savedScrollPosition);
+    }
+
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const scrollTop = scrollContainerRef.current.scrollTop;
+        const scrollHeight = scrollContainerRef.current.scrollHeight;
+        const clientHeight = scrollContainerRef.current.clientHeight;
+        const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
+        sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
+        setShowScrollTop(scrollTop > quarterPage);
+        console.log('ProfilePage Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      // Initial check
+      handleScroll();
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [location.pathname]);
+
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -142,9 +179,13 @@ const ProfilePage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex overflow-hidden">
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-        <div className="flex-1 flex items-center justify-center">
+        <div className={`flex-1 flex items-center justify-center transition-all duration-300 ${
+          sidebarCollapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-60 lg:ml-64'
+        }`}>
           <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
@@ -153,9 +194,13 @@ const ProfilePage: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex overflow-hidden">
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-        <div className="flex-1 flex items-center justify-center">
+        <div className={`flex-1 flex items-center justify-center transition-all duration-300 ${
+          sidebarCollapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-60 lg:ml-64'
+        }`}>
           <div className="text-center">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Profile not found</h2>
             <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
@@ -166,10 +211,18 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+    <>
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex overflow-hidden">
+        <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className="flex-1 flex flex-col">
+      <div 
+        ref={scrollContainerRef}
+        className={`flex-1 flex flex-col overflow-y-auto transition-all duration-300 ${
+          sidebarCollapsed 
+            ? 'md:ml-16' 
+            : 'md:ml-60 lg:ml-64'
+        }`}
+      >
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
           <Breadcrumb />
@@ -318,7 +371,21 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+
+      </div>
+
+      {/* Scroll to Top Button - Global */}
+      <button
+        onClick={scrollToTop}
+        className="group fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 hover:-translate-y-1 backdrop-blur-sm border border-white/20"
+        style={{ zIndex: 9999 }}
+        title="Scroll to top"
+      >
+        <svg className="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
+    </>
   );
 };
 

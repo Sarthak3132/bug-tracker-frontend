@@ -28,33 +28,37 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       )}
       
       {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 z-50 flex flex-col min-h-screen
-        md:relative md:translate-x-0
+      <div className={`bg-white shadow-lg transition-all duration-300 z-50 flex flex-col h-screen
+        md:fixed md:top-0 md:left-0
         ${isCollapsed 
           ? 'fixed -translate-x-full md:translate-x-0 w-48 sm:w-56 md:w-60 lg:w-16' 
           : 'fixed translate-x-0 w-48 sm:w-56 md:w-60 lg:w-64'
         }
       `}>
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center text-lg">
-              🐛
-            </div>
-            {!isCollapsed && (
-              <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                BugTracker
-              </h1>
-            )}
+      <div className="p-4 border-b border-gray-200 relative">
+        <div 
+          className={`flex items-center gap-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+          onClick={onToggle}
+        >
+          <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center text-lg">
+            🐛
           </div>
+          {!isCollapsed && (
+            <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+              BugTracker
+            </h1>
+          )}
+        </div>
+        {!isCollapsed && (
           <button
             onClick={onToggle}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors md:hidden"
+            className="absolute top-4 right-2 p-1.5 hover:bg-gray-100 rounded-full transition-all duration-200 text-gray-400 hover:text-gray-600 hover:scale-110"
+            title="Collapse sidebar"
           >
-            {isCollapsed ? '☰' : '✕'}
+            «
           </button>
-        </div>
+        )}
       </div>
 
       {/* Profile Section */}
