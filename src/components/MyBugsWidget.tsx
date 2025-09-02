@@ -12,7 +12,7 @@ const MyBugsWidget: React.FC = () => {
 
   useEffect(() => {
     fetchMyBugs();
-  }, [user]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchMyBugs = async () => {
     if (!user) return;

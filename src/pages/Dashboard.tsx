@@ -22,7 +22,7 @@ interface Project {
 }
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
   const { showSuccess, showError } = useNotification();
   const navigate = useNavigate();

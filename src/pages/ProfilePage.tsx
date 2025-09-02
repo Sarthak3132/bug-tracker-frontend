@@ -25,7 +25,7 @@ interface UserProfile {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user } = useAuth();
+  const { } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
   const navigate = useNavigate();
   

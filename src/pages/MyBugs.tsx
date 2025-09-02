@@ -19,7 +19,7 @@ const MyBugs: React.FC = () => {
       { label: 'My Bugs', icon: '🐛' }
     ]);
     fetchMyBugs();
-  }, [setBreadcrumbs, user]);
+  }, [setBreadcrumbs, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchMyBugs = async () => {
     if (!user) return;

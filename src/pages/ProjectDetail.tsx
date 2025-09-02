@@ -58,7 +58,7 @@ const ProjectDetail: React.FC = () => {
       fetchProject();
       fetchBugs();
     }
-  }, [projectId]);
+  }, [projectId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (project) {

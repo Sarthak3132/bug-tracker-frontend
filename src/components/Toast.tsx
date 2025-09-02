@@ -114,7 +114,7 @@ const Toast: React.FC<ToastProps> = ({ type, message, onClose, duration = 3000 }
       }, duration);
       return () => clearTimeout(timer);
     }
-  }, [type, duration]);
+  }, [type, duration]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClose = () => {
     setIsExiting(true);

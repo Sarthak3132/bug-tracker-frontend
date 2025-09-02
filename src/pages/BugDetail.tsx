@@ -13,7 +13,7 @@ import { MESSAGES } from '../utils/notifications';
 const BugDetail: React.FC = () => {
   const { projectId, bugId } = useParams<{ projectId: string; bugId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
   const { showSuccess, showError } = useNotification();
   
@@ -31,14 +31,14 @@ const BugDetail: React.FC = () => {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
-  const [assignmentSuccess, setAssignmentSuccess] = useState<string | null>(null);
+  const [assignmentSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (projectId && bugId) {
       fetchBug();
       fetchProjectMembers();
     }
-  }, [projectId, bugId]);
+  }, [projectId, bugId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (bug) {
