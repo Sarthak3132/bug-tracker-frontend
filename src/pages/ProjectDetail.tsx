@@ -7,7 +7,9 @@ import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import EditProjectModal from '../components/EditProjectModal';
 import AddMemberModal from '../components/AddMemberModal';
-import { projectAPI } from '../services/api';
+import CreateBugModal from '../components/CreateBugModal';
+import { projectAPI, bugAPI } from '../services/api';
+import { Bug, BugFilters } from '../types/bug.types';
 
 interface Project {
   _id: string;
@@ -34,6 +36,13 @@ const ProjectDetail: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingMember, setIsAddingMember] = useState(false);
   const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'bugs' | 'activity'>('bugs');
+  const [bugs, setBugs] = useState<Bug[]>([]);
+  const [bugsLoading, setBugsLoading] = useState(false);
+  const [totalBugCount, setTotalBugCount] = useState(0);
+  const [bugFilters, setBugFilters] = useState<BugFilters>({});
+  const [isCreateBugModalOpen, setIsCreateBugModalOpen] = useState(false);
+  const [isCreatingBug, setIsCreatingBug] = useState(false);
 
   const currentUserMember = project?.members.find(m => m.userId._id === user?._id);
   const isAdmin = currentUserMember?.role === 'admin';
@@ -47,6 +56,7 @@ const ProjectDetail: React.FC = () => {
   useEffect(() => {
     if (projectId) {
       fetchProject();
+      fetchBugs();
     }
   }, [projectId]);
 
@@ -134,6 +144,66 @@ const ProjectDetail: React.FC = () => {
       alert(error.response?.data?.message || 'Failed to remove member');
     } finally {
       setIsRemovingMember(null);
+    }
+  };
+
+  const fetchBugs = async () => {
+    try {
+      setBugsLoading(true);
+      console.log('Fetching bugs for project:', projectId);
+      const response = await bugAPI.getBugs({ ...bugFilters, project: projectId! });
+      console.log('Bug response:', response.data);
+      setBugs(response.data.bugs || []);
+      setTotalBugCount(response.data.totalCount || 0);
+    } catch (error) {
+      console.error('Error fetching bugs:', error);
+      setBugs([]);
+      setTotalBugCount(0);
+    } finally {
+      setBugsLoading(false);
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'open': return 'bg-blue-100 text-blue-800';
+      case 'in-progress': return 'bg-yellow-100 text-yellow-800';
+      case 'resolved': return 'bg-green-100 text-green-800';
+      case 'closed': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleCreateBug = async (bugData: {
+    title: string;
+    description: string;
+    priority: string;
+    assignedTo?: string;
+  }) => {
+    try {
+      setIsCreatingBug(true);
+      await bugAPI.createBug({
+        ...bugData,
+        project: projectId!,
+        reportedBy: user!._id
+      });
+      await fetchBugs();
+      setIsCreateBugModalOpen(false);
+    } catch (error: any) {
+      console.error('Error creating bug:', error);
+      alert(error.response?.data?.message || 'Failed to create bug');
+    } finally {
+      setIsCreatingBug(false);
     }
   };
 
@@ -297,12 +367,228 @@ const ProjectDetail: React.FC = () => {
             </div>
           </div>
 
-          {/* Recent Activity Placeholder */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-            <div className="text-center py-8 text-gray-500">
-              <p>No recent activity</p>
-              <p className="text-sm mt-1">Bug tracking features coming soon</p>
+          {/* Tabs */}
+          <div className="card">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6">
+                <button
+                  onClick={() => setActiveTab('bugs')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'bugs'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Bugs ({totalBugCount})
+                </button>
+                <button
+                  onClick={() => setActiveTab('activity')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'activity'
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Activity
+                </button>
+              </nav>
+            </div>
+
+            <div className="p-6">
+              {activeTab === 'bugs' && (
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Project Bugs</h2>
+                    <Button 
+                      variant="primary" 
+                      onClick={() => setIsCreateBugModalOpen(true)}
+                    >
+                      + Create Bug
+                    </Button>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                    <select
+                      value={bugFilters.status || ''}
+                      onChange={(e) => setBugFilters({ ...bugFilters, status: e.target.value || undefined })}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="">All Status</option>
+                      <option value="open">Open</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="resolved">Resolved</option>
+                      <option value="closed">Closed</option>
+                    </select>
+                    <select
+                      value={bugFilters.priority || ''}
+                      onChange={(e) => setBugFilters({ ...bugFilters, priority: e.target.value || undefined })}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="">All Priority</option>
+                      <option value="critical">Critical</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                    <select
+                      value={bugFilters.assignedTo || ''}
+                      onChange={(e) => setBugFilters({ ...bugFilters, assignedTo: e.target.value || undefined })}
+                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                    >
+                      <option value="">All Assignees</option>
+                      {project?.members.map((member) => (
+                        <option key={member._id} value={member.userId._id}>
+                          {member.userId.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button 
+                      variant="secondary" 
+                      onClick={fetchBugs}
+                      className="text-sm"
+                    >
+                      Apply Filters
+                    </Button>
+                  </div>
+
+                  {/* Bugs List */}
+                  {bugsLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : bugs.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No bugs found</p>
+                      <p className="text-sm mt-1">Create your first bug report</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {bugs.map((bug) => (
+                        <div key={bug._id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-medium text-gray-900">{bug.title}</h3>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(bug.priority)}`}>
+                                  {bug.priority}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bug.status)}`}>
+                                  {bug.status}
+                                </span>
+                              </div>
+                              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{bug.description}</p>
+                              <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <span>Reported by {bug.reportedBy?.name}</span>
+                                {bug.assignedTo ? (
+                                  <span className="flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                    Assigned to {bug.assignedTo.name}
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center gap-1 text-orange-600">
+                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                    Unassigned
+                                  </span>
+                                )}
+                                <span>{new Date(bug.createdAt).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 ml-4">
+                              {!bug.assignedTo && (
+                                <Button 
+                                  variant="primary" 
+                                  className="text-xs px-2 py-1"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Quick assign to current user
+                                    bugAPI.assignBug(projectId!, bug._id, user!._id)
+                                      .then(() => fetchBugs())
+                                      .catch(err => console.error('Quick assign failed:', err));
+                                  }}
+                                >
+                                  👤 Assign to Me
+                                </Button>
+                              )}
+                              <Button 
+                                variant="secondary" 
+                                className="text-xs px-2 py-1"
+                                onClick={() => navigate(`/projects/${projectId}/bugs/${bug._id}`)}
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'activity' && (
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
+                  {bugs.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No activity yet</p>
+                      <p className="text-sm mt-1">Activity will appear when bugs are created or updated</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {bugs
+                        .flatMap(bug => [
+                          // Bug creation activity
+                          {
+                            id: `created-${bug._id}`,
+                            type: 'created',
+                            bug: bug,
+                            user: bug.reportedBy,
+                            timestamp: bug.createdAt,
+                            message: `created bug "${bug.title}"`
+                          },
+                          // History activities
+                          ...bug.history.map(entry => ({
+                            id: `${bug._id}-${entry.changedAt}`,
+                            type: 'updated',
+                            bug: bug,
+                            user: entry.changedBy,
+                            timestamp: entry.changedAt,
+                            field: entry.field,
+                            oldValue: entry.oldValue,
+                            newValue: entry.newValue,
+                            comment: entry.comment,
+                            message: `changed ${entry.field} from "${entry.oldValue}" to "${entry.newValue}"${entry.comment ? ` - ${entry.comment}` : ''}`
+                          }))
+                        ])
+                        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                        .slice(0, 10)
+                        .map((activity) => (
+                          <div key={activity.id} className="p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-900">
+                                  <span className="font-medium">{activity.user?.name || 'Unknown User'}</span>
+                                  {' '}{activity.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(activity.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="ml-3">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  activity.type === 'created' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                                }`}>
+                                  {activity.type === 'created' ? 'Created' : 'Updated'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -323,7 +609,15 @@ const ProjectDetail: React.FC = () => {
         onClose={() => setIsAddMemberModalOpen(false)}
         onSubmit={handleAddMember}
         isLoading={isAddingMember}
+      />
 
+      {/* Create Bug Modal */}
+      <CreateBugModal
+        isOpen={isCreateBugModalOpen}
+        onClose={() => setIsCreateBugModalOpen(false)}
+        onSubmit={handleCreateBug}
+        isLoading={isCreatingBug}
+        projectMembers={project?.members || []}
       />
 
       {/* Delete Confirmation Modal */}

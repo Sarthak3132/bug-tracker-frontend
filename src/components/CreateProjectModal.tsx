@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import Input from './Input';
+import LoadingSpinner from './LoadingSpinner';
+import { MESSAGES } from '../utils/notifications';
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -111,10 +113,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </div>
+                <LoadingSpinner message={MESSAGES.PROJECT.CREATING} />
               ) : (
                 'Create Project'
               )}

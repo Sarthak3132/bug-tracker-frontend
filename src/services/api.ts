@@ -98,6 +98,79 @@ export const userAPI = {
   searchUsers: (query: string) => api.get(`/users/search?q=${encodeURIComponent(query)}`),
 };
 
+export const bugAPI = {
+  getBugs: (filters: {
+    project: string;
+    status?: string;
+    priority?: string;
+    assignedTo?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    limit?: number;
+    skip?: number;
+    searchText?: string;
+  }) => {
+    const { project, ...params } = filters;
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        queryParams.append(key, value.toString());
+      }
+    });
+    const queryString = queryParams.toString();
+    return api.get(`/projects/${project}/bugs${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getAllBugs: (projectId: string, params?: {
+    status?: string;
+    priority?: string;
+    assignedTo?: string;
+    sortBy?: string;
+    sortOrder?: string;
+    limit?: number;
+    skip?: number;
+    searchText?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    return api.get(`/projects/${projectId}/bugs${queryString ? `?${queryString}` : ''}`);
+  },
+  
+  getBugById: (projectId: string, bugId: string) => 
+    api.get(`/projects/${projectId}/bugs/${bugId}`),
+  
+  createBug: (bugData: {
+    title: string;
+    description: string;
+    priority?: string;
+    status?: string;
+    assignedTo?: string;
+    project: string;
+    reportedBy: string;
+  }) => api.post(`/projects/${bugData.project}/bugs`, bugData),
+  
+  updateBug: (projectId: string, bugId: string, bugData: any) => 
+    api.put(`/projects/${projectId}/bugs/${bugId}`, bugData),
+  
+  deleteBug: (projectId: string, bugId: string) => 
+    api.delete(`/projects/${projectId}/bugs/${bugId}`),
+  
+  assignBug: (projectId: string, bugId: string, assignedTo: string) => 
+    api.put(`/projects/${projectId}/bugs/${bugId}/assign`, { assignedTo }),
+  
+  addComment: (projectId: string, bugId: string, content: string) => 
+    api.post(`/projects/${projectId}/bugs/${bugId}/comments`, { content }),
+};
+
+
+
 // Auth utilities
 export const authUtils = {
   saveToken: (token: string) => {
