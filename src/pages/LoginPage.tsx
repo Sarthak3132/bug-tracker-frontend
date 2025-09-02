@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout';
 import Input from '../components/Input';
+import PasswordInput from '../components/PasswordInput';
 import Button from '../components/Button';
 import { authAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,6 +41,7 @@ const LoginPage: React.FC = () => {
     }
 
     try {
+      console.log('Attempting login with:', { email: formData.email, apiUrl: process.env.REACT_APP_API_URL });
       const response = await authAPI.login(formData.email, formData.password);
       console.log('Login response:', response.data);
       // Fix user ID property mismatch
@@ -51,7 +53,10 @@ const LoginPage: React.FC = () => {
       login(response.data.token, userData);
       navigate('/dashboard');
     } catch (error: any) {
-      setErrors({ general: error.response?.data?.error || 'Login failed. Please try again.' });
+      console.error('Login error:', error);
+      console.error('Error response:', error.response);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Login failed. Please try again.';
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -113,10 +118,9 @@ const LoginPage: React.FC = () => {
           required
         />
 
-        <Input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           label="Password"
           placeholder="Enter your password"
           value={formData.password}
