@@ -43,7 +43,7 @@ const ResetPasswordPage: React.FC = () => {
     return newErrors;
   };
 
-  const {} = useNavigate();
+  // const navigate = useNavigate(); // Commented out as not used
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
