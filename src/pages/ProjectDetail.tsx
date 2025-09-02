@@ -6,6 +6,7 @@ import Sidebar from '../components/Sidebar';
 import Breadcrumb from '../components/Breadcrumb';
 import Button from '../components/Button';
 import EditProjectModal from '../components/EditProjectModal';
+import AddMemberModal from '../components/AddMemberModal';
 import { projectAPI } from '../services/api';
 
 interface Project {
@@ -13,7 +14,7 @@ interface Project {
   name: string;
   description: string;
   createdBy: { _id: string; name: string; email: string };
-  members: Array<{ _id: string; userId: { _id: string; name: string; email: string }; role: string }>;
+  members: Array<{ _id: string; userId: { _id: string; name: string; email: string; avatar?: string }; role: string }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,7 +30,10 @@ const ProjectDetail: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [isRemovingMember, setIsRemovingMember] = useState<string | null>(null);
 
   const currentUserMember = project?.members.find(m => m.userId._id === user?._id);
   const isAdmin = currentUserMember?.role === 'admin';
@@ -103,6 +107,33 @@ const ProjectDetail: React.FC = () => {
       console.error('Error deleting project:', error);
       console.error('Project ID being sent:', projectId);
       alert(error.response?.data?.message || 'Failed to delete project');
+    }
+  };
+
+  const handleAddMember = async (memberData: { userEmail: string; role: string }) => {
+    try {
+      setIsAddingMember(true);
+      await projectAPI.addMember(projectId!, memberData);
+      await fetchProject(); // Refresh project data
+      setIsAddMemberModalOpen(false);
+    } catch (error: any) {
+      console.error('Error adding member:', error);
+      alert(error.response?.data?.message || 'Failed to add member');
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleRemoveMember = async (memberId: string) => {
+    try {
+      setIsRemovingMember(memberId);
+      await projectAPI.removeMember(projectId!, memberId);
+      await fetchProject(); // Refresh project data
+    } catch (error: any) {
+      console.error('Error removing member:', error);
+      alert(error.response?.data?.message || 'Failed to remove member');
+    } finally {
+      setIsRemovingMember(null);
     }
   };
 
@@ -213,7 +244,11 @@ const ProjectDetail: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Team Members ({project.members.length})</h2>
               {isAdmin && (
-                <Button variant="primary" className="text-sm">
+                <Button 
+                  variant="primary" 
+                  className="text-sm"
+                  onClick={() => setIsAddMemberModalOpen(true)}
+                >
                   + Add Member
                 </Button>
               )}
@@ -222,7 +257,20 @@ const ProjectDetail: React.FC = () => {
               {project.members.map((member) => (
                 <div key={member._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                    {member.userId?.avatar ? (
+                      <img
+                        src={`http://localhost:5000/${member.userId.avatar}`}
+                        alt={member.userId.name}
+                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold ${member.userId?.avatar ? 'hidden' : ''}`}>
                       {member.userId?.name?.charAt(0) || 'U'}
                     </div>
                     <div>
@@ -235,8 +283,12 @@ const ProjectDetail: React.FC = () => {
                       {member.role}
                     </span>
                     {isAdmin && member.userId._id !== user?._id && (
-                      <button className="text-red-600 hover:text-red-800 text-sm">
-                        Remove
+                      <button 
+                        onClick={() => handleRemoveMember(member._id)}
+                        disabled={isRemovingMember === member._id}
+                        className="text-red-600 hover:text-red-800 text-sm disabled:opacity-50"
+                      >
+                        {isRemovingMember === member._id ? 'Removing...' : 'Remove'}
                       </button>
                     )}
                   </div>
@@ -263,6 +315,15 @@ const ProjectDetail: React.FC = () => {
         onSubmit={handleEditProject}
         isLoading={isEditing}
         initialData={{ name: project.name, description: project.description || '' }}
+      />
+
+      {/* Add Member Modal */}
+      <AddMemberModal
+        isOpen={isAddMemberModalOpen}
+        onClose={() => setIsAddMemberModalOpen(false)}
+        onSubmit={handleAddMember}
+        isLoading={isAddingMember}
+
       />
 
       {/* Delete Confirmation Modal */}

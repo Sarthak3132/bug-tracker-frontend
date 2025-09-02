@@ -64,7 +64,7 @@ export const projectAPI = {
   
   deleteProject: (projectId: string) => api.delete(`/projects/${projectId}`),
   
-  addMember: (projectId: string, memberData: { userId: string; role: string }) =>
+  addMember: (projectId: string, memberData: { userEmail: string; role: string }) =>
     api.post(`/projects/${projectId}/members`, memberData),
   
   removeMember: (projectId: string, memberId: string) =>
@@ -92,6 +92,10 @@ export const userAPI = {
       },
     });
   },
+  
+  getAllUsers: () => api.get('/users'),
+  
+  searchUsers: (query: string) => api.get(`/users/search?q=${encodeURIComponent(query)}`),
 };
 
 // Auth utilities
