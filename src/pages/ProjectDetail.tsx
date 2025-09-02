@@ -397,7 +397,7 @@ const ProjectDetail: React.FC = () => {
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {member.userId?.avatar ? (
                       <img
-                        src={`http://localhost:5000/${member.userId.avatar}`}
+                        src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/${member.userId.avatar}`}
                         alt={member.userId.name}
                         className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         crossOrigin="anonymous"
