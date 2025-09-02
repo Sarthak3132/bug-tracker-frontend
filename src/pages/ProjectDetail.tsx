@@ -29,7 +29,7 @@ const ProjectDetail: React.FC = () => {
   
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
@@ -177,9 +177,10 @@ const ProjectDetail: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open': return 'bg-blue-100 text-blue-800';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800';
+      case 'in-progress': return 'bg-purple-100 text-purple-800';
       case 'resolved': return 'bg-green-100 text-green-800';
       case 'closed': return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -254,38 +255,51 @@ const ProjectDetail: React.FC = () => {
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       <div className="flex-1 flex flex-col">
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+        >
+          ☰
+        </button>
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <Breadcrumb />
-          
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{project.name}</h1>
-              <p className="text-gray-600 mt-1">Project Details & Management</p>
-            </div>
-            {isAdmin && (
-              <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => setIsEditModalOpen(true)}>
-                  Edit Project
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  onClick={() => setIsDeleteModalOpen(true)}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  Delete Project
-                </Button>
+          <div className="lg:pl-16">
+            <Breadcrumb />
+            
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mt-4">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{project.name}</h1>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Project Details & Management</p>
               </div>
-            )}
+              {isAdmin && (
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setIsEditModalOpen(true)}
+                    className="text-sm sm:text-base"
+                  >
+                    Edit Project
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="text-red-600 border-red-300 hover:bg-red-50 text-sm sm:text-base"
+                  >
+                    Delete Project
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4 sm:p-6 space-y-6">
+        <div className="flex-1 p-4 sm:p-6">
+          <div className="lg:pl-16 space-y-4 sm:space-y-6">
           {/* Project Info */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Project Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Project Information</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                 <p className="text-gray-900">{project.name}</p>
@@ -310,13 +324,13 @@ const ProjectDetail: React.FC = () => {
           </div>
 
           {/* Members */}
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Team Members ({project.members.length})</h2>
+          <div className="card p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900">Team Members ({project.members.length})</h2>
               {isAdmin && (
                 <Button 
                   variant="primary" 
-                  className="text-sm"
+                  className="text-sm w-full sm:w-auto"
                   onClick={() => setIsAddMemberModalOpen(true)}
                 >
                   + Add Member
@@ -325,13 +339,13 @@ const ProjectDetail: React.FC = () => {
             </div>
             <div className="space-y-3">
               {project.members.map((member) => (
-                <div key={member._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div key={member._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     {member.userId?.avatar ? (
                       <img
                         src={`http://localhost:5000/${member.userId.avatar}`}
                         alt={member.userId.name}
-                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                         crossOrigin="anonymous"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
@@ -340,15 +354,15 @@ const ProjectDetail: React.FC = () => {
                         }}
                       />
                     ) : null}
-                    <div className={`w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold ${member.userId?.avatar ? 'hidden' : ''}`}>
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 ${member.userId?.avatar ? 'hidden' : ''}`}>
                       {member.userId?.name?.charAt(0) || 'U'}
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{member.userId?.name || 'Unknown User'}</p>
-                      <p className="text-sm text-gray-600">{member.userId?.email || 'No email'}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{member.userId?.name || 'Unknown User'}</p>
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{member.userId?.email || 'No email'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between sm:justify-end gap-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(member.role)}`}>
                       {member.role}
                     </span>
@@ -356,7 +370,7 @@ const ProjectDetail: React.FC = () => {
                       <button 
                         onClick={() => handleRemoveMember(member._id)}
                         disabled={isRemovingMember === member._id}
-                        className="text-red-600 hover:text-red-800 text-sm disabled:opacity-50"
+                        className="text-red-600 hover:text-red-800 text-xs sm:text-sm disabled:opacity-50 px-2 py-1"
                       >
                         {isRemovingMember === member._id ? 'Removing...' : 'Remove'}
                       </button>
@@ -370,10 +384,10 @@ const ProjectDetail: React.FC = () => {
           {/* Tabs */}
           <div className="card">
             <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+              <nav className="flex space-x-4 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
                 <button
                   onClick={() => setActiveTab('bugs')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                     activeTab === 'bugs'
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -383,7 +397,7 @@ const ProjectDetail: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setActiveTab('activity')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                     activeTab === 'activity'
                       ? 'border-primary-500 text-primary-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -394,25 +408,26 @@ const ProjectDetail: React.FC = () => {
               </nav>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {activeTab === 'bugs' && (
                 <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900">Project Bugs</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900">Project Bugs</h2>
                     <Button 
                       variant="primary" 
                       onClick={() => setIsCreateBugModalOpen(true)}
+                      className="text-sm sm:text-base w-full sm:w-auto"
                     >
                       + Create Bug
                     </Button>
                   </div>
 
                   {/* Filters */}
-                  <div className="flex flex-wrap gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
                     <select
                       value={bugFilters.status || ''}
                       onChange={(e) => setBugFilters({ ...bugFilters, status: e.target.value || undefined })}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-xs sm:text-sm w-full"
                     >
                       <option value="">All Status</option>
                       <option value="open">Open</option>
@@ -423,7 +438,7 @@ const ProjectDetail: React.FC = () => {
                     <select
                       value={bugFilters.priority || ''}
                       onChange={(e) => setBugFilters({ ...bugFilters, priority: e.target.value || undefined })}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-xs sm:text-sm w-full"
                     >
                       <option value="">All Priority</option>
                       <option value="critical">Critical</option>
@@ -434,7 +449,7 @@ const ProjectDetail: React.FC = () => {
                     <select
                       value={bugFilters.assignedTo || ''}
                       onChange={(e) => setBugFilters({ ...bugFilters, assignedTo: e.target.value || undefined })}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+                      className="px-3 py-2 border border-gray-300 rounded-md text-xs sm:text-sm w-full"
                     >
                       <option value="">All Assignees</option>
                       {project?.members.map((member) => (
@@ -446,7 +461,7 @@ const ProjectDetail: React.FC = () => {
                     <Button 
                       variant="secondary" 
                       onClick={fetchBugs}
-                      className="text-sm"
+                      className="text-xs sm:text-sm w-full"
                     >
                       Apply Filters
                     </Button>
@@ -465,54 +480,55 @@ const ProjectDetail: React.FC = () => {
                   ) : (
                     <div className="space-y-3">
                       {bugs.map((bug) => (
-                        <div key={bug._id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-medium text-gray-900">{bug.title}</h3>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(bug.priority)}`}>
-                                  {bug.priority}
-                                </span>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bug.status)}`}>
-                                  {bug.status}
-                                </span>
+                        <div key={bug._id} className="p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <h3 className="font-medium text-gray-900 text-sm sm:text-base truncate flex-1 min-w-0">{bug.title}</h3>
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(bug.priority)}`}>
+                                    {bug.priority}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(bug.status)}`}>
+                                    {bug.status}
+                                  </span>
+                                </div>
                               </div>
-                              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{bug.description}</p>
-                              <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span>Reported by {bug.reportedBy?.name}</span>
+                              <p className="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">{bug.description}</p>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-gray-500">
+                                <span className="truncate">By {bug.reportedBy?.name}</span>
                                 {bug.assignedTo ? (
                                   <span className="flex items-center gap-1">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                    Assigned to {bug.assignedTo.name}
+                                    <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></span>
+                                    <span className="truncate">Assigned to {bug.assignedTo.name}</span>
                                   </span>
                                 ) : (
                                   <span className="flex items-center gap-1 text-orange-600">
-                                    <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                                    Unassigned
+                                    <span className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></span>
+                                    <span>Unassigned</span>
                                   </span>
                                 )}
-                                <span>{new Date(bug.createdAt).toLocaleDateString()}</span>
+                                <span className="hidden sm:inline">{new Date(bug.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 ml-4">
+                            <div className="flex items-center gap-2 sm:flex-col sm:gap-1">
                               {!bug.assignedTo && (
                                 <Button 
                                   variant="primary" 
-                                  className="text-xs px-2 py-1"
+                                  className="text-xs px-2 py-1 flex-1 sm:flex-none"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    // Quick assign to current user
                                     bugAPI.assignBug(projectId!, bug._id, user!._id)
                                       .then(() => fetchBugs())
                                       .catch(err => console.error('Quick assign failed:', err));
                                   }}
                                 >
-                                  👤 Assign to Me
+                                  👤 Assign
                                 </Button>
                               )}
                               <Button 
                                 variant="secondary" 
-                                className="text-xs px-2 py-1"
+                                className="text-xs px-2 py-1 flex-1 sm:flex-none"
                                 onClick={() => navigate(`/projects/${projectId}/bugs/${bug._id}`)}
                               >
                                 View
@@ -590,6 +606,7 @@ const ProjectDetail: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
       </div>

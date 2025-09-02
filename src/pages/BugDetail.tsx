@@ -19,11 +19,11 @@ const BugDetail: React.FC = () => {
   
   const [bug, setBug] = useState<Bug | null>(null);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
   const [newComment, setNewComment] = useState('');
   const [isAddingComment, setIsAddingComment] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({ priority: '', status: '' });
+  const [editData, setEditData] = useState({ title: '', description: '', priority: '', status: '' });
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -52,7 +52,7 @@ const BugDetail: React.FC = () => {
         },
         { label: bug.title, icon: '🐛' }
       ]);
-      setEditData({ priority: bug.priority, status: bug.status });
+      setEditData({ title: bug.title, description: bug.description, priority: bug.priority, status: bug.status });
     }
   }, [bug, setBreadcrumbs, navigate, projectId]);
 
@@ -204,18 +204,20 @@ const BugDetail: React.FC = () => {
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       <div className="flex-1 flex flex-col">
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+        >
+          ☰
+        </button>
+        
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <Breadcrumb />
+          <div className="lg:pl-16">
+            <Breadcrumb />
           <div className="flex items-start justify-between mt-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+              <div className="mb-2">
                 <h1 className="text-2xl font-bold text-gray-900">{bug.title}</h1>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getPriorityColor(bug.priority)}`}>
-                  {bug.priority}
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(bug.status)}`}>
-                  {bug.status}
-                </span>
               </div>
               <p className="text-gray-600">
                 Project: {typeof bug.project === 'object' ? bug.project.name : 'Unknown Project'}
@@ -247,15 +249,17 @@ const BugDetail: React.FC = () => {
                 variant="secondary" 
                 onClick={() => setShowDeleteModal(true)}
                 disabled={isDeleting}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
               >
                 Delete
               </Button>
             </div>
           </div>
+          </div>
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 space-y-6">
+        <div className="flex-1 p-4 sm:p-6">
+          <div className="lg:pl-16 space-y-4 sm:space-y-6">
           {/* Success Message */}
           {assignmentSuccess && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -267,10 +271,38 @@ const BugDetail: React.FC = () => {
           )}
 
           {/* Bug Details */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Bug Details</h2>
+          <div className="card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Bug Details</h2>
             {isEditing ? (
               <div className="space-y-4 mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Edit Bug</h3>
+                  <Button 
+                    onClick={handleUpdateBug}
+                    disabled={isUpdating}
+                    variant="primary"
+                  >
+                    {isUpdating ? 'Updating...' : 'Update Bug'}
+                  </Button>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    value={editData.title || bug?.title || ''}
+                    onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={editData.description || bug?.description || ''}
+                    onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
@@ -301,7 +333,7 @@ const BugDetail: React.FC = () => {
                   </div>
                 </div>
                 {editData.status !== bug?.status && (
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status Change Comment (Optional)</label>
                     <textarea
                       value={statusComment}
@@ -312,18 +344,9 @@ const BugDetail: React.FC = () => {
                     />
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleUpdateBug}
-                    disabled={isUpdating}
-                    variant="primary"
-                  >
-                    {isUpdating ? 'Updating...' : 'Update Bug'}
-                  </Button>
-                </div>
               </div>
             ) : null}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(bug.priority)}`}>
@@ -360,7 +383,7 @@ const BugDetail: React.FC = () => {
                   )}
                 </div>
               </div>
-              <div className="md:col-span-2">
+              <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <p className="text-gray-900 whitespace-pre-wrap">{bug.description}</p>
               </div>
@@ -376,8 +399,8 @@ const BugDetail: React.FC = () => {
           </div>
 
           {/* History */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">History</h2>
+          <div className="card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">History</h2>
             {bug.history.length === 0 ? (
               <p className="text-gray-500">No history available</p>
             ) : (
@@ -401,8 +424,8 @@ const BugDetail: React.FC = () => {
           </div>
 
           {/* Comments */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Comments</h2>
+          <div className="card p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Comments</h2>
             
             {/* Add Comment */}
             <div className="mb-6">
@@ -444,14 +467,15 @@ const BugDetail: React.FC = () => {
               </div>
             )}
           </div>
+          </div>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="card max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Bug</h3>
+          <div className="card max-w-md w-full mx-4 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Delete Bug</h3>
             <p className="text-gray-600 mb-6">
               Are you sure you want to delete "{bug.title}"? This action cannot be undone.
             </p>
@@ -481,8 +505,8 @@ const BugDetail: React.FC = () => {
       {/* Assign Bug Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="card max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="card max-w-md w-full mx-4 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
               {bug.assignedTo ? 'Reassign Bug' : 'Assign Bug'}
             </h3>
             <p className="text-gray-600 mb-4">

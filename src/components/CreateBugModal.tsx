@@ -52,10 +52,10 @@ const CreateBugModal: React.FC<CreateBugModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="card max-w-md w-full p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Bug</h3>
+      <div className="card max-w-md w-full mx-4 p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Create New Bug</h3>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title *
@@ -116,7 +116,7 @@ const CreateBugModal: React.FC<CreateBugModalProps> = ({
             </select>
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-3 sm:pt-4">
             <Button
               type="button"
               variant="secondary"

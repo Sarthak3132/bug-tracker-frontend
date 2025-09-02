@@ -11,7 +11,7 @@ const MyBugs: React.FC = () => {
   const { setBreadcrumbs } = useBreadcrumb();
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -73,20 +73,30 @@ const MyBugs: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex relative">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
       <div className="flex-1 flex flex-col">
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+        >
+          ☰
+        </button>
+        
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <Breadcrumb />
-          <div className="mt-4">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Bugs</h1>
-            <p className="text-gray-600 mt-1">All bugs assigned to you</p>
+          <div className="lg:pl-16">
+            <Breadcrumb />
+            <div className="mt-4">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Bugs</h1>
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">All bugs assigned to you</p>
+            </div>
           </div>
         </div>
 
         <div className="flex-1 p-4 sm:p-6">
-          <div className="card p-6">
+          <div className="lg:pl-16">
+            <div className="card p-4 sm:p-6">
             {loading ? (
               <div className="flex justify-center py-8">
                 <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
@@ -100,19 +110,19 @@ const MyBugs: React.FC = () => {
                 <p>You don't have any bugs assigned to you at the moment.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-900">
                     {bugs.length} bug{bugs.length !== 1 ? 's' : ''} assigned to you
                   </h2>
                 </div>
                 
                 {bugs.map((bug) => (
-                  <div key={bug._id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-medium text-gray-900">{bug.title}</h3>
+                  <div key={bug._id} className="p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap items-start gap-2">
+                        <h3 className="font-medium text-gray-900 text-sm sm:text-base flex-1 min-w-0 truncate">{bug.title}</h3>
+                        <div className="flex gap-1 flex-shrink-0">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(bug.priority)}`}>
                             {bug.priority}
                           </span>
@@ -120,20 +130,21 @@ const MyBugs: React.FC = () => {
                             {bug.status}
                           </span>
                         </div>
-                        <p className="text-sm text-gray-500 mb-2">
-                          Project: {typeof bug.project === 'object' ? bug.project.name : 'Unknown Project'}
-                        </p>
-                        <p className="text-gray-600 text-sm mb-2">{bug.description}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>Reported by {bug.reportedBy?.name}</span>
-                          <span>{new Date(bug.createdAt).toLocaleDateString()}</span>
-                        </div>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        Project: {typeof bug.project === 'object' ? bug.project.name : 'Unknown Project'}
+                      </p>
+                      <p className="text-gray-600 text-xs sm:text-sm line-clamp-2">{bug.description}</p>
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-gray-500">
+                        <span className="truncate">Reported by {bug.reportedBy?.name}</span>
+                        <span>{new Date(bug.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>

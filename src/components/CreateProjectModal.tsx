@@ -57,9 +57,9 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="card max-w-md w-full p-6 animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Create New Project</h2>
+      <div className="card max-w-md w-full mx-4 p-4 sm:p-6 animate-fade-in">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Create New Project</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600 text-xl"
@@ -68,7 +68,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <Input
             id="name"
             name="name"
@@ -96,7 +96,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
             />
           </div>
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-3 pt-3 sm:pt-4">
             <Button
               type="button"
               variant="secondary"

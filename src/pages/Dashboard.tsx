@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768); // Collapsed only on mobile, open on tablet+
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -79,7 +79,7 @@ const Dashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex relative">
       {/* Sidebar */}
       <Sidebar 
         isCollapsed={sidebarCollapsed} 
@@ -87,24 +87,33 @@ const Dashboard: React.FC = () => {
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col lg:ml-0">
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+        >
+          ☰
+        </button>
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          {/* Breadcrumb */}
-          <Breadcrumb />
-          
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Projects</h1>
-              <p className="text-gray-600 mt-1">Manage and track your projects</p>
+        <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6 lg:ml-0">
+          <div className="lg:pl-16">
+            {/* Breadcrumb */}
+            <Breadcrumb />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Projects</h1>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and track your projects</p>
+              </div>
+              <Button 
+                variant="primary" 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="w-full sm:w-auto text-sm sm:text-base"
+              >
+                + Create Project
+              </Button>
             </div>
-            <Button 
-              variant="primary" 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="w-full sm:w-auto"
-            >
-              + Create Project
-            </Button>
           </div>
 
           {/* Search Bar */}
@@ -121,7 +130,8 @@ const Dashboard: React.FC = () => {
 
         {/* Content Area */}
         <div className="flex-1 p-4 sm:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="lg:pl-16">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Projects Section */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">My Projects ({filteredProjects.length})</h2>
@@ -143,7 +153,7 @@ const Dashboard: React.FC = () => {
                   <p className="text-sm text-gray-500">No projects found</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {filteredProjects.slice(0, 4).map((project) => (
                     <ProjectCard
                       key={project._id}
@@ -164,6 +174,7 @@ const Dashboard: React.FC = () => {
 
             {/* My Bugs Widget */}
             <MyBugsWidget />
+            </div>
           </div>
         </div>
       </div>

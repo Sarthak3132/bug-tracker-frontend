@@ -18,7 +18,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
   };
 
   return (
-    <div className={`bg-white shadow-lg transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} min-h-screen flex flex-col`}>
+    <>
+      {/* Mobile Overlay */}
+      {!isCollapsed && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={onToggle}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`bg-white shadow-lg transition-all duration-300 z-50 flex flex-col min-h-screen
+        md:relative md:translate-x-0
+        ${isCollapsed 
+          ? 'fixed -translate-x-full md:translate-x-0 w-48 sm:w-56 md:w-60 lg:w-16' 
+          : 'fixed translate-x-0 w-48 sm:w-56 md:w-60 lg:w-64'
+        }
+      `}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -34,9 +50,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           </div>
           <button
             onClick={onToggle}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors lg:hidden"
+            className="p-1 hover:bg-gray-100 rounded-md transition-colors md:hidden"
           >
-            {isCollapsed ? '→' : '←'}
+            {isCollapsed ? '☰' : '✕'}
           </button>
         </div>
       </div>
@@ -72,14 +88,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       <div className="flex-1 p-4">
         <nav className="space-y-2">
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => {
+              navigate('/dashboard');
+              // Don't auto-close on tablet/desktop, only on mobile
+              if (window.innerWidth < 768) {
+                onToggle();
+              }
+            }}
             className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <span className="text-lg">📊</span>
             {!isCollapsed && <span>Dashboard</span>}
           </button>
           <button 
-            onClick={() => navigate('/profile')}
+            onClick={() => {
+              navigate('/profile');
+              if (window.innerWidth < 768) {
+                onToggle();
+              }
+            }}
             className="w-full flex items-center gap-3 px-3 py-2 text-left text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <span className="text-lg">👤</span>
@@ -103,7 +130,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           {isCollapsed ? '🚪' : 'Logout'}
         </Button>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
