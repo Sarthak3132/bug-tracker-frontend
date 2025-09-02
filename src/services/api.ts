@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://bug-tracker-backend-0bz6.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -49,6 +49,49 @@ export const authAPI = {
     api.post('/auth/reset-password', { token, newPassword }),
   
   googleAuth: () => `${API_BASE_URL}/auth/google`,
+};
+
+export const projectAPI = {
+  getAllProjects: () => api.get('/projects'),
+  
+  getProjectById: (id: string) => api.get(`/projects/${id}`),
+  
+  createProject: (projectData: { name: string; description: string }) =>
+    api.post('/projects', projectData),
+  
+  updateProject: (projectId: string, projectData: { name: string; description: string }) =>
+    api.put(`/projects/${projectId}`, projectData),
+  
+  deleteProject: (projectId: string) => api.delete(`/projects/${projectId}`),
+  
+  addMember: (projectId: string, memberData: { userId: string; role: string }) =>
+    api.post(`/projects/${projectId}/members`, memberData),
+  
+  removeMember: (projectId: string, memberId: string) =>
+    api.delete(`/projects/${projectId}/members/${memberId}`),
+  
+  getProjectMembers: (projectId: string) => api.get(`/projects/${projectId}/members`),
+};
+
+export const userAPI = {
+  getProfile: () => api.get('/users/profile'),
+  
+  updateProfile: (profileData: {
+    name?: string;
+    bio?: string;
+    contactPreferences?: {
+      emailNotifications: boolean;
+      smsNotifications: boolean;
+    };
+  }) => api.put('/users/profile', profileData),
+  
+  uploadAvatar: (formData: FormData) => {
+    return api.post('/users/profile/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
 };
 
 // Auth utilities

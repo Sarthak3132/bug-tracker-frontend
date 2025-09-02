@@ -5,6 +5,7 @@ interface User {
   _id: string;
   name: string;
   email: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -34,14 +35,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = authUtils.getToken();
-    if (token) {
-      setUser({ _id: '', name: '', email: '' });
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const token = authUtils.getToken();
+      if (token) {
+        try {
+          // Make a request to validate token and get user data
+          const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/users/profile`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+          } else {
+            // Token is invalid, remove it
+            authUtils.removeToken();
+          }
+        } catch (error) {
+          // Token validation failed, remove it
+          authUtils.removeToken();
+        }
+      }
+      setLoading(false);
+    };
+    
+    initAuth();
   }, []);
 
   const login = (token: string, userData: User) => {
+    console.log('AuthContext login - token:', token);
+    console.log('AuthContext login - userData:', userData);
     authUtils.saveToken(token);
     setUser(userData);
   };

@@ -41,7 +41,14 @@ const LoginPage: React.FC = () => {
 
     try {
       const response = await authAPI.login(formData.email, formData.password);
-      login(response.data.token, response.data.user);
+      console.log('Login response:', response.data);
+      // Fix user ID property mismatch
+      const userData = {
+        ...response.data.user,
+        _id: response.data.user.id || response.data.user._id
+      };
+      console.log('Processed user data:', userData);
+      login(response.data.token, userData);
       navigate('/dashboard');
     } catch (error: any) {
       setErrors({ general: error.response?.data?.error || 'Login failed. Please try again.' });
