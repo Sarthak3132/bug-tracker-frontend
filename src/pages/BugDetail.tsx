@@ -69,12 +69,7 @@ const BugDetail: React.FC = () => {
     const handleScroll = () => {
       if (scrollContainerRef.current) {
         const scrollTop = scrollContainerRef.current.scrollTop;
-        const scrollHeight = scrollContainerRef.current.scrollHeight;
-        const clientHeight = scrollContainerRef.current.clientHeight;
-        const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
         sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
-        // setShowScrollTop(scrollTop > quarterPage);
-        // console.log('BugDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
       }
     };
 
