@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useBreadcrumb } from '../contexts/BreadcrumbContext';
+import { useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Breadcrumb from '../components/Breadcrumb';
 import { bugAPI, projectAPI } from '../services/api';
@@ -9,9 +10,11 @@ import { Bug } from '../types/bug.types';
 const MyBugs: React.FC = () => {
   const { user } = useAuth();
   const { setBreadcrumbs } = useBreadcrumb();
+  const location = useLocation();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 1024);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(window.innerWidth < 768);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -20,6 +23,34 @@ const MyBugs: React.FC = () => {
     ]);
     fetchMyBugs();
   }, [setBreadcrumbs, user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll position restoration
+  useEffect(() => {
+    const savedScrollPosition = sessionStorage.getItem(`scroll-${location.pathname}`);
+    if (savedScrollPosition && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = parseInt(savedScrollPosition);
+    }
+
+    const handleScroll = () => {
+      if (scrollContainerRef.current) {
+        const scrollTop = scrollContainerRef.current.scrollTop;
+        sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
+      }
+    };
+
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+      return () => container.removeEventListener('scroll', handleScroll);
+    }
+  }, [location.pathname]);
+
+  const scrollToTop = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const fetchMyBugs = async () => {
     if (!user) return;
@@ -73,29 +104,37 @@ const MyBugs: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex relative">
-      <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+    <>
+      <div className="h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex overflow-hidden">
+        <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className="flex-1 flex flex-col">
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+        <div 
+          ref={scrollContainerRef}
+          className={`flex-1 flex flex-col overflow-y-auto transition-all duration-300 ${
+            sidebarCollapsed 
+              ? 'md:ml-16' 
+              : 'md:ml-60 lg:ml-64'
+          }`}
         >
-          ☰
-        </button>
-        
-        <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <div className="lg:pl-16">
-            <Breadcrumb />
-            <div className="mt-4">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Bugs</h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">All bugs assigned to you</p>
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="md:hidden fixed top-4 left-4 z-30 p-2 bg-white rounded-lg shadow-md"
+          >
+            ☰
+          </button>
+          
+          <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
+            <div>
+              <Breadcrumb />
+              <div className="mt-4">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Bugs</h1>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">All bugs assigned to you</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex-1 p-4 sm:p-6">
-          <div className="lg:pl-16">
+          <div className="flex-1 p-4 sm:p-6">
+            <div>
             <div className="card p-4 sm:p-6">
             {loading ? (
               <div className="flex justify-center py-8">
@@ -145,10 +184,23 @@ const MyBugs: React.FC = () => {
               </div>
             )}
           </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Scroll to Top Button - Global */}
+      <button
+        onClick={scrollToTop}
+        className="group fixed bottom-6 right-6 p-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-110 hover:-translate-y-1 backdrop-blur-sm border border-white/20"
+        style={{ zIndex: 9999 }}
+        title="Scroll to top"
+      >
+        <svg className="w-5 h-5 group-hover:animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+        </svg>
+      </button>
+    </>
   );
 };
 
