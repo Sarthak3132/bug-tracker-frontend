@@ -45,7 +45,7 @@ const ProfilePage: React.FC = () => {
       smsNotifications: false
     }
   });
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     setBreadcrumbs([
@@ -69,8 +69,8 @@ const ProfilePage: React.FC = () => {
         const clientHeight = scrollContainerRef.current.clientHeight;
         const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
         sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
-        setShowScrollTop(scrollTop > quarterPage);
-        console.log('ProfilePage Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
+        // setShowScrollTop(scrollTop > quarterPage);
+        // console.log('ProfilePage Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
       }
     };
 

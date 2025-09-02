@@ -45,7 +45,7 @@ const ProjectDetail: React.FC = () => {
   const [bugFilters, setBugFilters] = useState<BugFilters>({});
   const [isCreateBugModalOpen, setIsCreateBugModalOpen] = useState(false);
   const [isCreatingBug, setIsCreatingBug] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // const [showScrollTop, setShowScrollTop] = useState(false);
 
   const currentUserMember = project?.members.find(m => m.userId._id === user?._id);
   const isAdmin = currentUserMember?.role === 'admin';
@@ -94,8 +94,8 @@ const ProjectDetail: React.FC = () => {
           const clientHeight = scrollContainerRef.current.clientHeight;
           const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
           sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
-          setShowScrollTop(scrollTop > quarterPage);
-          console.log('ProjectDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
+          // setShowScrollTop(scrollTop > quarterPage);
+          // console.log('ProjectDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
         }
       };
 

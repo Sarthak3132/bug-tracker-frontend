@@ -34,7 +34,7 @@ const BugDetail: React.FC = () => {
   const [isAssigning, setIsAssigning] = useState(false);
   const [projectMembers, setProjectMembers] = useState<any[]>([]);
   const [assignmentSuccess] = useState<string | null>(null);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  // const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     if (projectId && bugId) {
@@ -73,8 +73,8 @@ const BugDetail: React.FC = () => {
         const clientHeight = scrollContainerRef.current.clientHeight;
         const quarterPage = Math.max((scrollHeight - clientHeight) / 4, 50);
         sessionStorage.setItem(`scroll-${location.pathname}`, scrollTop.toString());
-        setShowScrollTop(scrollTop > quarterPage);
-        console.log('BugDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
+        // setShowScrollTop(scrollTop > quarterPage);
+        // console.log('BugDetail Scroll:', { scrollTop, scrollHeight, clientHeight, quarterPage, show: scrollTop > quarterPage });
       }
     };
 
